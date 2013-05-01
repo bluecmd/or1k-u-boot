@@ -118,6 +118,9 @@
 				CONFIG_SYS_SDRAM_SIZE - \
 				CONFIG_SYS_MONITOR_LEN)
 
+#define CONFIG_SYS_VECTORS_BASE		0
+#define CONFIG_SYS_VECTORS_LEN 		0x2000
+
 /*
  * Global data object and stack pointer
  */

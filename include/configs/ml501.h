@@ -64,6 +64,7 @@
 						 * Relocate the vectors code
                                                  * from flash to RAM at reset
 						 */
+#define CONFIG_SYS_VECTORS_BASE		CONFIG_SYS_FLASH_BASE
 #define CONFIG_SYS_VECTORS_LEN 		0x2000
 
 
