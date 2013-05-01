@@ -185,7 +185,7 @@ struct ethernet_hdr {
 };
 
 /* Ethernet header size */
-#define ETHER_HDR_SIZE	(sizeof(struct ethernet_hdr))
+#define ETHER_HDR_SIZE	14 /*(sizeof(struct ethernet_hdr))*/
 
 struct e802_hdr {
 	uchar		et_dest[6];	/* Destination node		*/
