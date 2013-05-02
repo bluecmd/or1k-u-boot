@@ -62,7 +62,6 @@ DECLARE_GLOBAL_DATA_PTR;
 */
 
 extern void timer_interrupt_init(void);
-extern void malloc_bin_reloc(void);
 extern int do_ambapp_print(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[]);
 extern int prom_init(void);
 
@@ -247,8 +246,8 @@ void board_init_f(ulong bootflag)
 	/*
 	 * We have to relocate the command table manually
 	 */
-	fixup_cmdtable(&__u_boot_cmd_start,
-		(ulong)(&__u_boot_cmd_end - &__u_boot_cmd_start));
+	fixup_cmdtable(ll_entry_start(cmd_tbl_t, cmd),
+			ll_entry_count(cmd_tbl_t, cmd));
 #endif /* defined(CONFIG_NEEDS_MANUAL_RELOC) */
 
 #if defined(CONFIG_CMD_AMBAPP) && defined(CONFIG_SYS_AMBAPP_PRINT_ON_STARTUP)
@@ -272,7 +271,6 @@ void board_init_f(ulong bootflag)
 	/* The Malloc area is immediately below the monitor copy in RAM */
 	mem_malloc_init(CONFIG_SYS_MALLOC_BASE,
 			CONFIG_SYS_MALLOC_END - CONFIG_SYS_MALLOC_BASE);
-	malloc_bin_reloc();
 
 #if !defined(CONFIG_SYS_NO_FLASH)
 	puts("Flash: ");
@@ -285,8 +283,7 @@ void board_init_f(ulong bootflag)
 		 *
 		 * NOTE: Maybe we should add some WATCHDOG_RESET()? XXX
 		 */
-		s = getenv("flashchecksum");
-		if (s && (*s == 'y')) {
+		if (getenv_yesno("flashchecksum") == 1) {
 			printf("  CRC: %08lX",
 			       crc32(0, (const unsigned char *)CONFIG_SYS_FLASH_BASE,
 				     flash_size)

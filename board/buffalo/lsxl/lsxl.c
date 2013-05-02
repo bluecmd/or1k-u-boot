@@ -49,9 +49,8 @@
  * you can do this only with a working network connection. Therefore, a random
  * ethernet address is generated if none is set and a DHCP request is sent.
  * After a successful DHCP response is received, the network settings are
- * configured and the ncip parameter is set to the serverip. Eg. for a working
- * resuce mode, you should set 'next-server' to the host where the netconsole
- * client is started.
+ * configured and the ncip is unset. Therefore, all netconsole packets are
+ * broadcasted.
  * Additionally, the bootsource is set to 'rescue'.
  */
 
@@ -76,7 +75,7 @@ int board_early_init_f(void)
 	 * Multi-Purpose Pins Functionality configuration
 	 * These strappings are taken from the original vendor uboot port.
 	 */
-	u32 kwmpp_config[] = {
+	static const u32 kwmpp_config[] = {
 		MPP0_SPI_SCn,
 		MPP1_SPI_MOSI,
 		MPP2_SPI_SCK,
@@ -195,9 +194,11 @@ int board_init(void)
 static void check_power_switch(void)
 {
 	if (kw_gpio_get_value(GPIO_POWER_SWITCH)) {
-		/* turn off HDD and USB power */
+		/* turn off fan, HDD and USB power */
 		kw_gpio_set_value(GPIO_HDD_POWER, 0);
 		kw_gpio_set_value(GPIO_USB_VBUS, 0);
+		kw_gpio_set_value(GPIO_FAN_HIGH, 1);
+		kw_gpio_set_value(GPIO_FAN_LOW, 1);
 		set_led(LED_OFF);
 
 		/* loop until released */
@@ -207,6 +208,8 @@ static void check_power_switch(void)
 		/* turn power on again */
 		kw_gpio_set_value(GPIO_HDD_POWER, 1);
 		kw_gpio_set_value(GPIO_USB_VBUS, 1);
+		kw_gpio_set_value(GPIO_FAN_HIGH, 0);
+		kw_gpio_set_value(GPIO_FAN_LOW, 0);
 		set_led(LED_POWER_BLINKING);
 	}
 }

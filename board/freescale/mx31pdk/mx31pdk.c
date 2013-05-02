@@ -30,15 +30,17 @@
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/sys_proto.h>
 #include <watchdog.h>
-#include <pmic.h>
+#include <power/pmic.h>
 #include <fsl_pmic.h>
+#include <errno.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#ifdef CONFIG_HW_WATCHDOG
-void hw_watchdog_reset(void)
+#ifdef CONFIG_SPL_BUILD
+void board_init_f(ulong bootflag)
 {
-	mxc_hw_watchdog_reset();
+	relocate_code(CONFIG_SPL_TEXT_BASE);
+	asm volatile("ldr pc, =nand_boot");
 }
 #endif
 
@@ -83,16 +85,21 @@ int board_late_init(void)
 {
 	u32 val;
 	struct pmic *p;
+	int ret;
 
-	pmic_init();
-	p = get_pmic();
+	ret = pmic_init(I2C_PMIC);
+	if (ret)
+		return ret;
 
+	p = pmic_get("FSL_PMIC");
+	if (!p)
+		return -ENODEV;
 	/* Enable RTC battery */
 	pmic_reg_read(p, REG_POWER_CTL0, &val);
 	pmic_reg_write(p, REG_POWER_CTL0, val | COINCHEN);
 	pmic_reg_write(p, REG_INT_STATUS1, RTCRSTI);
 #ifdef CONFIG_HW_WATCHDOG
-	mxc_hw_watchdog_enable();
+	hw_watchdog_init();
 #endif
 	return 0;
 }

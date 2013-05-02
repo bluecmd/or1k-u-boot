@@ -100,8 +100,6 @@
 
 #define CONFIG_SYS_I2C_SPEED		100000
 #define CONFIG_SYS_I2C_SLAVE		1
-#define CONFIG_SYS_I2C_BUS		0
-#define CONFIG_SYS_I2C_BUS_SELECT	1
 
 /*
  * PISMO support
@@ -273,6 +271,7 @@
 
 /* Defines for SPL */
 #define CONFIG_SPL
+#define CONFIG_SPL_FRAMEWORK
 #define CONFIG_SPL_TEXT_BASE		0x40200800
 #define CONFIG_SPL_MAX_SIZE		(54 * 1024)	/* 8 KB for stack */
 #define CONFIG_SPL_STACK		LOW_LEVEL_SRAM_STACK

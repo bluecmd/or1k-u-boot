@@ -140,12 +140,6 @@
 /*
  * Cpu Name
  */
-#define CONFIG_SYS_AT91_G15_CPU_NAME	"AT91SAM9G15"
-#define CONFIG_SYS_AT91_G25_CPU_NAME	"AT91SAM9G25"
-#define CONFIG_SYS_AT91_G35_CPU_NAME	"AT91SAM9G35"
-#define CONFIG_SYS_AT91_X25_CPU_NAME	"AT91SAM9X25"
-#define CONFIG_SYS_AT91_X35_CPU_NAME	"AT91SAM9X35"
-#define CONFIG_SYS_AT91_UNKNOWN_CPU	"Unknown CPU type"
 #define ATMEL_CPU_NAME	get_cpu_name()
 
 /*
@@ -154,6 +148,8 @@
 #define ATMEL_PIO_PORTS         4
 #define CPU_HAS_PIO3
 #define PIO_SCDR_DIV            (0x3fff <<  0)  /* Slow Clock Divider Mask */
+#define ATMEL_PMC_UHP		AT91SAM926x_PMC_UHP
+#define ATMEL_ID_UHP		ATMEL_ID_UHPHS
 
 /*
  * at91sam9x5 specific prototypes

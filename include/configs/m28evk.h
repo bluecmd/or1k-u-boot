@@ -135,7 +135,7 @@
  */
 #ifdef	CONFIG_CMD_MMC
 #define	CONFIG_MMC
-#define	CONFIG_MMC_BOUNCE_BUFFER
+#define	CONFIG_BOUNCE_BUFFER
 #define	CONFIG_GENERIC_MMC
 #define	CONFIG_MXS_MMC
 #endif
@@ -178,6 +178,8 @@
 		"512k(environment),"		\
 		"512k(redundant-environment),"	\
 		"4m(kernel),"			\
+		"128k(fdt),"			\
+		"8m(ramdisk),"			\
 		"-(filesystem)"
 #else
 #define	CONFIG_ENV_IS_NOWHERE
@@ -189,7 +191,6 @@
 #ifdef	CONFIG_CMD_NET
 #define	CONFIG_ETHPRIME			"FEC0"
 #define	CONFIG_FEC_MXC
-#define	CONFIG_FEC_MXC_MULTI
 #define	CONFIG_MII
 #define	CONFIG_FEC_XCV_TYPE		RMII
 #endif
@@ -232,7 +233,9 @@
 #ifdef	CONFIG_CMD_USB
 #define	CONFIG_USB_EHCI
 #define	CONFIG_USB_EHCI_MXS
-#define	CONFIG_EHCI_MXS_PORT		1
+#define CONFIG_EHCI_MXS_PORT0
+#define CONFIG_EHCI_MXS_PORT1
+#define CONFIG_USB_MAX_CONTROLLER_COUNT	2
 #define	CONFIG_EHCI_IS_TDI
 #define	CONFIG_USB_STORAGE
 #endif
@@ -243,21 +246,22 @@
 #ifdef	CONFIG_CMD_SPI
 #define	CONFIG_HARD_SPI
 #define	CONFIG_MXS_SPI
-#define	CONFIG_MXS_SPI_DMA_ENABLE
 #define	CONFIG_SPI_HALF_DUPLEX
 #define	CONFIG_DEFAULT_SPI_BUS		2
+#define	CONFIG_DEFAULT_SPI_CS		0
 #define	CONFIG_DEFAULT_SPI_MODE		SPI_MODE_0
 
 /* SPI FLASH */
 #ifdef	CONFIG_CMD_SF
 #define	CONFIG_SPI_FLASH
 #define	CONFIG_SPI_FLASH_STMICRO
-#define	CONFIG_SF_DEFAULT_CS		2
-#define	CONFIG_SF_DEFAULT_MODE		SPI_MODE_0
+#define	CONFIG_SF_DEFAULT_BUS		2
+#define	CONFIG_SF_DEFAULT_CS		0
 #define	CONFIG_SF_DEFAULT_SPEED		40000000
+#define	CONFIG_SF_DEFAULT_MODE		SPI_MODE_0
 
-#define	CONFIG_ENV_SPI_CS		0
 #define	CONFIG_ENV_SPI_BUS		2
+#define	CONFIG_ENV_SPI_CS		0
 #define	CONFIG_ENV_SPI_MAX_HZ		40000000
 #define	CONFIG_ENV_SPI_MODE		SPI_MODE_0
 #endif
@@ -270,7 +274,7 @@
 #define	CONFIG_SETUP_MEMORY_TAGS
 #define	CONFIG_BOOTDELAY	3
 #define	CONFIG_BOOTFILE		"uImage"
-#define	CONFIG_BOOTARGS		"console=ttyAM0,115200n8 "
+#define	CONFIG_BOOTARGS		"console=ttyAMA0,115200n8 "
 #define	CONFIG_BOOTCOMMAND	"run bootcmd_net"
 #define	CONFIG_LOADADDR		0x42000000
 #define	CONFIG_SYS_LOAD_ADDR	CONFIG_LOADADDR
@@ -295,7 +299,7 @@
 		"if tftp ${update_nand_full_filename} ; then "		\
 		"run update_nand_get_fcb_size ; "			\
 		"nand scrub -y 0x0 ${filesize} ; "			\
-		"nand write.raw ${loadaddr} 0x0 ${update_nand_fcb} ; "	\
+		"nand write.raw ${loadaddr} 0x0 ${fcb_sz} ; "	\
 		"setexpr update_off ${loadaddr} + ${update_nand_fcb} ; " \
 		"setexpr update_sz ${filesize} - ${update_nand_fcb} ; " \
 		"nand write ${update_off} ${update_nand_fcb} ${update_sz} ; " \

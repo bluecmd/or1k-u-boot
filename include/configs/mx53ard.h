@@ -24,8 +24,6 @@
 
 #define CONFIG_MX53
 
-#define CONFIG_SYS_MX5_HCLK	24000000
-#define CONFIG_SYS_MX5_CLK32		32768
 #define CONFIG_DISPLAY_CPUINFO
 #define CONFIG_DISPLAY_BOARDINFO
 
@@ -42,6 +40,16 @@
 
 #define CONFIG_BOARD_EARLY_INIT_F
 #define CONFIG_MXC_GPIO
+
+#define CONFIG_SYS_MAX_NAND_DEVICE	1
+#define CONFIG_SYS_NAND_BASE		NFC_BASE_ADDR_AXI
+#define CONFIG_NAND_MXC
+#define CONFIG_MXC_NAND_REGS_BASE	NFC_BASE_ADDR_AXI
+#define CONFIG_MXC_NAND_IP_REGS_BASE	NFC_BASE_ADDR
+#define CONFIG_SYS_NAND_LARGEPAGE
+#define CONFIG_MXC_NAND_HWECC
+#define CONFIG_SYS_NAND_USE_FLASH_BBT
+#define CONFIG_CMD_NAND
 
 #define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE	UART1_BASE
@@ -121,7 +129,7 @@
 		"dhcp ${uimage}; bootm\0" \
 
 #define CONFIG_BOOTCOMMAND \
-	"if mmc rescan ${mmcdev}; then " \
+	"mmc dev ${mmcdev}; if mmc rescan; then " \
 		"if run loadbootscript; then " \
 			"run bootscript; " \
 		"else " \

@@ -39,9 +39,10 @@ typedef volatile unsigned char	vu_char;
 #include <linux/bitops.h>
 #include <linux/types.h>
 #include <linux/string.h>
+#include <linux/stringify.h>
 #include <asm/ptrace.h>
 #include <stdarg.h>
-#if defined(CONFIG_PCI) && (defined(CONFIG_4xx) && !defined(CONFIG_AP1000))
+#if defined(CONFIG_PCI) && defined(CONFIG_4xx)
 #include <pci.h>
 #endif
 #if defined(CONFIG_8xx)
@@ -194,18 +195,6 @@ typedef void (interrupt_handler_t)(void *);
 # endif
 #endif
 
-#ifndef CONFIG_SERIAL_MULTI
-
-#if defined(CONFIG_8xx_CONS_SMC1) || defined(CONFIG_8xx_CONS_SMC2) \
- || defined(CONFIG_8xx_CONS_SCC1) || defined(CONFIG_8xx_CONS_SCC2) \
- || defined(CONFIG_8xx_CONS_SCC3) || defined(CONFIG_8xx_CONS_SCC4)
-
-#define CONFIG_SERIAL_MULTI	1
-
-#endif
-
-#endif /* CONFIG_SERIAL_MULTI */
-
 /*
  * General Purpose Utilities
  */
@@ -281,7 +270,8 @@ int	cpu_init(void);
 phys_size_t initdram (int);
 int	display_options (void);
 void	print_size(unsigned long long, const char *);
-int	print_buffer (ulong addr, void* data, uint width, uint count, uint linelen);
+int print_buffer(ulong addr, const void *data, uint width, uint count,
+		 uint linelen);
 
 /* common/main.c */
 void	main_loop	(void);
@@ -311,7 +301,7 @@ int	abortboot(int bootdelay);
 extern char console_buffer[];
 
 /* arch/$(ARCH)/lib/board.c */
-void	board_init_f  (ulong) __attribute__ ((noreturn));
+void	board_init_f(ulong);
 void	board_init_r  (gd_t *, ulong) __attribute__ ((noreturn));
 int	checkboard    (void);
 int	checkflash    (void);
@@ -321,6 +311,17 @@ extern ulong monitor_flash_len;
 int mac_read_from_eeprom(void);
 extern u8 _binary_dt_dtb_start[];	/* embedded device tree blob */
 int set_cpu_clk_info(void);
+int print_cpuinfo(void);
+int update_flash_size(int flash_size);
+
+/**
+ * Show the DRAM size in a board-specific way
+ *
+ * This is used by boards to display DRAM information in their own way.
+ *
+ * @param size	Size of DRAM (which should be displayed along with other info)
+ */
+void board_show_dram(ulong size);
 
 /* common/flash.c */
 void flash_perror (int);
@@ -351,14 +352,40 @@ int	envmatch     (uchar *, int);
 char	*getenv	     (const char *);
 int	getenv_f     (const char *name, char *buf, unsigned len);
 ulong getenv_ulong(const char *name, int base, ulong default_val);
+
+/**
+ * getenv_hex() - Return an environment variable as a hex value
+ *
+ * Decode an environment as a hex number (it may or may not have a 0x
+ * prefix). If the environment variable cannot be found, or does not start
+ * with hex digits, the default value is returned.
+ *
+ * @varname:		Variable to decode
+ * @default_val:	Value to return on error
+ */
+ulong getenv_hex(const char *varname, ulong default_val);
+
+/*
+ * Read an environment variable as a boolean
+ * Return -1 if variable does not exist (default to true)
+ */
+int getenv_yesno(const char *var);
 int	saveenv	     (void);
-#ifdef CONFIG_PPC		/* ARM version to be fixed! */
-int inline setenv    (const char *, const char *);
-#else
 int	setenv	     (const char *, const char *);
 int setenv_ulong(const char *varname, ulong value);
-int setenv_addr(const char *varname, const void *addr);
-#endif /* CONFIG_PPC */
+int setenv_hex(const char *varname, ulong value);
+/**
+ * setenv_addr - Set an environment variable to an address in hex
+ *
+ * @varname:	Environmet variable to set
+ * @addr:	Value to set it to
+ * @return 0 if ok, 1 on error
+ */
+static inline int setenv_addr(const char *varname, const void *addr)
+{
+	return setenv_hex(varname, (ulong)addr);
+}
+
 #ifdef CONFIG_ARM
 # include <asm/mach-types.h>
 # include <asm/setup.h>
@@ -387,7 +414,7 @@ void	pci_init      (void);
 void	pci_init_board(void);
 void	pciinfo	      (int, int);
 
-#if defined(CONFIG_PCI) && (defined(CONFIG_4xx) && !defined(CONFIG_AP1000))
+#if defined(CONFIG_PCI) && defined(CONFIG_4xx)
     int	   pci_pre_init	       (struct pci_controller *);
     int	   is_pci_host	       (struct pci_controller *);
 #endif
@@ -516,7 +543,11 @@ int	dcache_status (void);
 void	dcache_enable (void);
 void	dcache_disable(void);
 void	mmu_disable(void);
-void	relocate_code (ulong, gd_t *, ulong) __attribute__ ((noreturn));
+#if defined(CONFIG_ARM)
+void	relocate_code(ulong);
+#else
+void	relocate_code(ulong, gd_t *, ulong) __attribute__ ((noreturn));
+#endif
 ulong	get_endaddr   (void);
 void	trap_init     (ulong);
 #if defined (CONFIG_4xx)	|| \
@@ -629,7 +660,6 @@ ulong	get_PCI_freq (void);
 #endif
 #if defined(CONFIG_S3C24X0) || \
     defined(CONFIG_LH7A40X) || \
-    defined(CONFIG_S3C6400) || \
     defined(CONFIG_EP93XX)
 ulong	get_FCLK (void);
 ulong	get_HCLK (void);
@@ -670,7 +700,7 @@ static inline ulong get_ddr_freq(ulong dummy)
 }
 #endif
 
-#if defined(CONFIG_4xx) || defined(CONFIG_IOP480)
+#if defined(CONFIG_4xx)
 #  if defined(CONFIG_440)
 #	if defined(CONFIG_440SPE)
 	 unsigned long determine_sysper(void);
@@ -829,6 +859,13 @@ void	fputc(int file, const char c);
 int	ftstc(int file);
 int	fgetc(int file);
 
+/* lib/gzip.c */
+int gzip(void *dst, unsigned long *lenp,
+		unsigned char *src, unsigned long srclen);
+int zzip(void *dst, unsigned long *lenp, unsigned char *src,
+		unsigned long srclen, int stoponerr,
+		int (*func)(unsigned long, unsigned long));
+
 /* lib/net_utils.c */
 #include <net.h>
 static inline IPaddr_t getenv_IPaddr(char *var)
@@ -862,6 +899,23 @@ int cpu_reset(int nr);
 int cpu_disable(int nr);
 int cpu_release(int nr, int argc, char * const argv[]);
 #endif
+
+/* Define a null map_sysmem() if the architecture doesn't use it */
+# ifndef CONFIG_ARCH_MAP_SYSMEM
+static inline void *map_sysmem(phys_addr_t paddr, unsigned long len)
+{
+	return (void *)(uintptr_t)paddr;
+}
+
+static inline void unmap_sysmem(const void *vaddr)
+{
+}
+
+static inline phys_addr_t map_to_sysmem(void *ptr)
+{
+	return (phys_addr_t)(uintptr_t)ptr;
+}
+# endif
 
 #endif /* __ASSEMBLY__ */
 

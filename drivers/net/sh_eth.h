@@ -1,8 +1,8 @@
 /*
  * sh_eth.h - Driver for Renesas SuperH ethernet controler.
  *
- * Copyright (C) 2008, 2011 Renesas Solutions Corp.
- * Copyright (c) 2008, 2011 Nobuhiro Iwamatsu
+ * Copyright (C) 2008 - 2012 Renesas Solutions Corp.
+ * Copyright (c) 2008 - 2012 Nobuhiro Iwamatsu
  * Copyright (c) 2007 Carlos Munoz <carlos@kenati.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,6 +25,7 @@
 
 #define SHETHER_NAME "sh_eth"
 
+#if defined(CONFIG_SH)
 /* Malloc returns addresses in the P1 area (cacheable). However we need to
    use area P2 (non-cacheable) */
 #define ADDR_TO_P2(addr)	((((int)(addr) & ~0xe0000000) | 0xa0000000))
@@ -35,6 +36,12 @@
 #else
 #define ADDR_TO_PHY(addr)	((int)(addr) & ~0xe0000000)
 #endif
+#elif defined(CONFIG_ARM)
+#define inl		readl
+#define outl	writel
+#define ADDR_TO_PHY(addr)	((int)(addr))
+#define ADDR_TO_P2(addr)	(addr)
+#endif /* defined(CONFIG_SH) */
 
 /* Number of supported ports */
 #define MAX_PORT_NUM	2
@@ -281,7 +288,7 @@ static const u16 sh_eth_offset_fast_sh4[SH_ETH_MAX_REGISTER_OFFSET] = {
 #if defined(CONFIG_CPU_SH7763) || defined(CONFIG_CPU_SH7734)
 #define SH_ETH_TYPE_GETHER
 #define BASE_IO_ADDR	0xfee00000
-#elif defined(CONFIG_CPU_SH7757)
+#elif defined(CONFIG_CPU_SH7757) || defined(CONFIG_CPU_SH7752)
 #if defined(CONFIG_SH_ETHER_USE_GETHER)
 #define SH_ETH_TYPE_GETHER
 #define BASE_IO_ADDR	0xfee00000
@@ -292,6 +299,9 @@ static const u16 sh_eth_offset_fast_sh4[SH_ETH_MAX_REGISTER_OFFSET] = {
 #elif defined(CONFIG_CPU_SH7724)
 #define SH_ETH_TYPE_ETHER
 #define BASE_IO_ADDR	0xA4600000
+#elif defined(CONFIG_R8A7740)
+#define SH_ETH_TYPE_GETHER
+#define BASE_IO_ADDR	0xE9A00000
 #endif
 
 /*
@@ -336,7 +346,7 @@ enum DMAC_T_BIT {
 
 /* GECMR */
 enum GECMR_BIT {
-#if defined(CONFIG_CPU_SH7757)
+#if defined(CONFIG_CPU_SH7757) || defined(CONFIG_CPU_SH7752)
 	GECMR_1000B = 0x20, GECMR_100B = 0x01, GECMR_10B = 0x00,
 #else
 	GECMR_1000B = 0x01, GECMR_100B = 0x04, GECMR_10B = 0x00,

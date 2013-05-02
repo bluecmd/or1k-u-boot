@@ -29,7 +29,6 @@ int display_dram_config(void);
 int init_baudrate_f(void);
 int calculate_relocation_address(void);
 
-int copy_gd_to_ram_f_r(void);
 int init_cache_f_r(void);
 
 int set_reloc_flag_r(void);
@@ -38,5 +37,8 @@ int init_bd_struct_r(void);
 int flash_init_r(void);
 int status_led_set_r(void);
 int set_load_addr_r(void);
+int init_func_spi(void);
+int find_fdt(void);
+int prepare_fdt(void);
 
 #endif	/* !_INIT_HELPERS_H_ */

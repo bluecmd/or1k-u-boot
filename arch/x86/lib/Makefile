@@ -25,12 +25,10 @@ include $(TOPDIR)/config.mk
 
 LIB	= $(obj)lib$(ARCH).o
 
-SOBJS-$(CONFIG_SYS_PC_BIOS)	+= bios.o
-SOBJS-$(CONFIG_SYS_PCI_BIOS)	+= bios_pci.o
-SOBJS-$(CONFIG_SYS_X86_REALMODE)	+= realmode_switch.o
-
-COBJS-$(CONFIG_SYS_PC_BIOS)	+= bios_setup.o
+ifeq ($(CONFIG_SYS_GENERIC_BOARD),)
 COBJS-y	+= board.o
+endif
+
 COBJS-y	+= bootm.o
 COBJS-y	+= cmd_boot.o
 COBJS-y	+= gcc.o
@@ -41,12 +39,11 @@ COBJS-$(CONFIG_SYS_PCAT_INTERRUPTS) += pcat_interrupts.o
 COBJS-$(CONFIG_SYS_GENERIC_TIMER) += pcat_timer.o
 COBJS-$(CONFIG_PCI) += pci.o
 COBJS-$(CONFIG_PCI) += pci_type1.o
-COBJS-$(CONFIG_SYS_X86_REALMODE)	+= realmode.o
 COBJS-y	+= relocate.o
+COBJS-y += physmem.o
 COBJS-y	+= string.o
 COBJS-$(CONFIG_SYS_X86_ISR_TIMER)	+= timer.o
-COBJS-$(CONFIG_VIDEO)	+= video_bios.o
-COBJS-$(CONFIG_VIDEO)	+= video.o
+COBJS-$(CONFIG_VIDEO_VGA)	+= video.o
 COBJS-$(CONFIG_CMD_ZBOOT)	+= zimage.o
 
 SRCS	:= $(SOBJS-y:.o=.S) $(COBJS-y:.o=.c)

@@ -120,9 +120,13 @@
 #  define CONFIG_SYS_TIMER_0_IRQ	XILINX_TIMER_IRQ
 #endif
 
-/* FSL */
-/* #define	CONFIG_SYS_FSL_2 */
-/* #define	FSL_INTR_2	1 */
+/* watchdog */
+#if defined(XILINX_WATCHDOG_BASEADDR) && defined(XILINX_WATCHDOG_IRQ)
+# define CONFIG_WATCHDOG_BASEADDR	XILINX_WATCHDOG_BASEADDR
+# define CONFIG_WATCHDOG_IRQ		XILINX_WATCHDOG_IRQ
+# define CONFIG_HW_WATCHDOG
+# define CONFIG_XILINX_TB_WATCHDOG
+#endif
 
 /*
  * memory layout - Example
@@ -287,6 +291,10 @@
 # undef CONFIG_DCACHE
 #endif
 
+#ifndef XILINX_DCACHE_BYTE_SIZE
+#define XILINX_DCACHE_BYTE_SIZE	32768
+#endif
+
 /*
  * BOOTP options
  */
@@ -414,9 +422,16 @@
 					"nor0=flash-0\0"\
 					"mtdparts=mtdparts=flash-0:"\
 					"256k(u-boot),256k(env),3m(kernel),"\
-					"1m(romfs),1m(cramfs),-(jffs2)\0"
+					"1m(romfs),1m(cramfs),-(jffs2)\0"\
+					"nc=setenv stdout nc;"\
+					"setenv stdin nc\0" \
+					"serial=setenv stdout serial;"\
+					"setenv stdin serial\0"
 
 #define CONFIG_CMDLINE_EDITING
+
+#define CONFIG_NETCONSOLE
+#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 
 /* Use the HUSH parser */
 #define CONFIG_SYS_HUSH_PARSER

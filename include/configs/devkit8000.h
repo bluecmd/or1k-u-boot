@@ -108,8 +108,6 @@
 #define CONFIG_HARD_I2C			1
 #define CONFIG_SYS_I2C_SPEED		100000
 #define CONFIG_SYS_I2C_SLAVE		1
-#define CONFIG_SYS_I2C_BUS		0
-#define CONFIG_SYS_I2C_BUS_SELECT	1
 #define CONFIG_DRIVER_OMAP34XX_I2C	1
 
 /* TWL4030 */
@@ -198,6 +196,7 @@
 		"run commonargs; " \
 		"setenv bootargs ${bootargs} " \
 		"root=/dev/mmcblk0p2 " \
+		"rootwait " \
 		"${kernelopts}\0" \
 	"nandargs=" \
 		"run commonargs; " \
@@ -232,7 +231,7 @@
 		"dhcp ${loadaddr}; " \
 		"run netargs; " \
 		"bootm ${loadaddr}\0" \
-	"autoboot=if mmc rescan ${mmcdev}; then " \
+	"autoboot=mmc dev ${mmcdev}; if mmc rescan; then " \
 			"if run loadbootscript; then " \
 				"run bootscript; " \
 			"else " \
@@ -303,6 +302,7 @@
 
 /* Defines for SPL */
 #define CONFIG_SPL
+#define CONFIG_SPL_FRAMEWORK
 #define CONFIG_SPL_NAND_SIMPLE
 
 #define CONFIG_SPL_LIBCOMMON_SUPPORT
@@ -314,6 +314,9 @@
 #define CONFIG_SPL_GPIO_SUPPORT
 #define CONFIG_SPL_POWER_SUPPORT
 #define CONFIG_SPL_NAND_SUPPORT
+#define CONFIG_SPL_NAND_BASE
+#define CONFIG_SPL_NAND_DRIVERS
+#define CONFIG_SPL_NAND_ECC
 #define CONFIG_SPL_MMC_SUPPORT
 #define CONFIG_SPL_FAT_SUPPORT
 #define CONFIG_SPL_LDSCRIPT		"$(CPUDIR)/omap-common/u-boot-spl.lds"
@@ -351,7 +354,6 @@
 
 /* SPL OS boot options */
 #define CONFIG_SPL_OS_BOOT
-#define CONFIG_SPL_OS_BOOT_KEY	26
 
 #define CONFIG_CMD_SPL
 #define CONFIG_CMD_SPL_WRITE_SIZE       0x400 /* 1024 byte */

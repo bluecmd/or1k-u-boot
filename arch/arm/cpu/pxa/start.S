@@ -102,7 +102,7 @@ _end_vect:
 
 .globl _TEXT_BASE
 _TEXT_BASE:
-#ifdef	CONFIG_SPL_BUILD
+#if defined(CONFIG_SPL_BUILD) && defined(CONFIG_SPL_TEXT_BASE)
 	.word	CONFIG_SPL_TEXT_BASE
 #else
 	.word	CONFIG_SYS_TEXT_BASE
@@ -118,9 +118,13 @@ _TEXT_BASE:
 _bss_start_ofs:
 	.word __bss_start - _start
 
+.globl _image_copy_end_ofs
+_image_copy_end_ofs:
+	.word __image_copy_end - _start
+
 .globl _bss_end_ofs
 _bss_end_ofs:
-	.word __bss_end__ - _start
+	.word __bss_end - _start
 
 .globl _end_ofs
 _end_ofs:
@@ -164,47 +168,36 @@ reset:
 	bl	lock_cache_for_stack
 #endif
 
-/* Set stackpointer in internal RAM to call board_init_f */
-call_board_init_f:
-	ldr	sp, =(CONFIG_SYS_INIT_SP_ADDR)
-	bic	sp, sp, #7 /* 8-byte alignment for ABI compliance */
-	ldr	r0, =0x00000000
-	bl	board_init_f
+	bl	_main
 
 /*------------------------------------------------------------------------------*/
 #ifndef CONFIG_SPL_BUILD
 /*
- * void relocate_code (addr_sp, gd, addr_moni)
+ * void relocate_code(addr_moni)
  *
- * This "function" does not return, instead it continues in RAM
- * after relocating the monitor code.
- *
+ * This function relocates the monitor code.
  */
 	.globl	relocate_code
 relocate_code:
-	mov	r4, r0	/* save addr_sp */
-	mov	r5, r1	/* save addr of gd */
-	mov	r6, r2	/* save addr of destination */
-
-	/* Set up the stack						    */
-stack_setup:
-	mov	sp, r4
+	mov	r6, r0	/* save addr of destination */
 
 /* Disable the Dcache RAM lock for stack now */
 #ifdef	CONFIG_CPU_PXA25X
+	mov	r12, lr
 	bl	cpu_init_crit
+	mov	lr, r12
 #endif
 
 	adr	r0, _start
-	cmp	r0, r6
-	beq	clear_bss		/* skip relocation */
+	subs	r9, r6, r0		/* r9 <- relocation offset */
+	beq	relocate_done		/* skip relocation */
 	mov	r1, r6			/* r1 <- scratch for copy_loop */
-	ldr	r3, _bss_start_ofs
+	ldr	r3, _image_copy_end_ofs
 	add	r2, r0, r3		/* r2 <- source end address	    */
 
 copy_loop:
-	ldmia	r0!, {r9-r10}		/* copy from source address [r0]    */
-	stmia	r1!, {r9-r10}		/* copy to   target address [r1]    */
+	ldmia	r0!, {r10-r11}		/* copy from source address [r0]    */
+	stmia	r1!, {r10-r11}		/* copy to   target address [r1]    */
 	cmp	r0, r2			/* until source end address [r2]    */
 	blo	copy_loop
 
@@ -213,7 +206,6 @@ copy_loop:
 	 * fix .rel.dyn relocations
 	 */
 	ldr	r0, _TEXT_BASE		/* r0 <- Text base */
-	sub	r9, r6, r0		/* r9 <- relocation offset */
 	ldr	r10, _dynsym_start_ofs	/* r10 <- sym table ofs */
 	add	r10, r10, r0		/* r10 <- sym table in FLASH */
 	ldr	r2, _rel_dyn_start_ofs	/* r2 <- rel dyn start ofs */
@@ -249,48 +241,9 @@ fixnext:
 	blo	fixloop
 #endif
 
-clear_bss:
-#ifndef CONFIG_SPL_BUILD
-	ldr	r0, _bss_start_ofs
-	ldr	r1, _bss_end_ofs
-	mov	r4, r6			/* reloc addr */
-	add	r0, r0, r4
-	add	r1, r1, r4
-	mov	r2, #0x00000000		/* clear			    */
+relocate_done:
 
-clbss_l:cmp	r0, r1			/* clear loop... */
-	bhs	clbss_e			/* if reached end of bss, exit */
-	str	r2, [r0]
-	add	r0, r0, #4
-	b	clbss_l
-clbss_e:
-#endif	/* #ifndef CONFIG_SPL_BUILD */
-
-/*
- * We are done. Do not return, instead branch to second part of board
- * initialization, now running from RAM.
- */
-#ifdef CONFIG_ONENAND_SPL
-	ldr     r0, _onenand_boot_ofs
-	mov	pc, r0
-
-_onenand_boot_ofs:
-	.word onenand_boot
-#else
-jump_2_ram:
-	ldr	r0, _board_init_r_ofs
-	ldr     r1, _TEXT_BASE
-	add	lr, r0, r1
-	add	lr, lr, r9
-	/* setup parameters for board_init_r */
-	mov	r0, r5		/* gd_t */
-	mov	r1, r6		/* dest_addr */
-	/* jump to it ... */
-	mov	pc, lr
-
-_board_init_r_ofs:
-	.word board_init_r - _start
-#endif
+	bx	lr
 
 _rel_dyn_start_ofs:
 	.word __rel_dyn_start - _start
@@ -298,7 +251,14 @@ _rel_dyn_end_ofs:
 	.word __rel_dyn_end - _start
 _dynsym_start_ofs:
 	.word __dynsym_start - _start
+
 #endif
+
+	.globl	c_runtime_cpu_setup
+c_runtime_cpu_setup:
+
+	bx	lr
+
 /*
  *************************************************************************
  *
@@ -425,8 +385,9 @@ cpu_init_crit:
 	str	r0, [r13]			@ save R0's value.
 	ldr	r0, IRQ_STACK_START_IN		@ get data regions start
 	str	lr, [r0]			@ save caller lr in position 0 of saved stack
-	mrs	r0, spsr			@ get the spsr
+	mrs	lr, spsr			@ get the spsr
 	str	lr, [r0, #4]			@ save spsr in position 1 of saved stack
+	ldr	lr, [r0]			@ restore lr
 	ldr	r0, [r13]			@ restore r0
 	add	r13, r13, #4			@ pop stack entry
 	.endm

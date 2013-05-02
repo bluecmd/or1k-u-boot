@@ -98,3 +98,19 @@ ulong get_timer(ulong base)
 {
 	return system_ticks - base;
 }
+
+void timer_set_tsc_base(uint64_t new_base)
+{
+	gd->arch.tsc_base = new_base;
+}
+
+uint64_t timer_get_tsc(void)
+{
+	uint64_t time_now;
+
+	time_now = rdtsc();
+	if (!gd->arch.tsc_base)
+		gd->arch.tsc_base = time_now;
+
+	return time_now - gd->arch.tsc_base;
+}

@@ -34,7 +34,7 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-struct cpu_type cpu_type_list [] = {
+static struct cpu_type cpu_type_list[] = {
 #if defined(CONFIG_MPC85xx)
 	CPU_TYPE_ENTRY(8533, 8533, 1),
 	CPU_TYPE_ENTRY(8535, 8535, 1),
@@ -73,8 +73,21 @@ struct cpu_type cpu_type_list [] = {
 	CPU_TYPE_ENTRY(P4080, P4080, 8),
 	CPU_TYPE_ENTRY(P5010, P5010, 1),
 	CPU_TYPE_ENTRY(P5020, P5020, 2),
+	CPU_TYPE_ENTRY(P5021, P5021, 2),
+	CPU_TYPE_ENTRY(P5040, P5040, 4),
+	CPU_TYPE_ENTRY(T4240, T4240, 0),
+	CPU_TYPE_ENTRY(T4120, T4120, 0),
+	CPU_TYPE_ENTRY(B4860, B4860, 0),
+	CPU_TYPE_ENTRY(G4860, G4860, 0),
+	CPU_TYPE_ENTRY(G4060, G4060, 0),
+	CPU_TYPE_ENTRY(B4440, B4440, 0),
+	CPU_TYPE_ENTRY(G4440, G4440, 0),
+	CPU_TYPE_ENTRY(B4420, B4420, 0),
+	CPU_TYPE_ENTRY(B4220, B4220, 0),
 	CPU_TYPE_ENTRY(BSC9130, 9130, 1),
 	CPU_TYPE_ENTRY(BSC9131, 9131, 1),
+	CPU_TYPE_ENTRY(BSC9132, 9132, 2),
+	CPU_TYPE_ENTRY(BSC9232, 9232, 2),
 #elif defined(CONFIG_MPC86xx)
 	CPU_TYPE_ENTRY(8610, 8610, 1),
 	CPU_TYPE_ENTRY(8641, 8641, 2),
@@ -114,7 +127,7 @@ u32 compute_ppc_cpumask(void)
 #define compute_ppc_cpumask()	1
 #endif /* CONFIG_SYS_FSL_QORIQ_CHASSIS2 */
 
-struct cpu_type cpu_type_unknown = CPU_TYPE_ENTRY(Unknown, Unknown, 0);
+static struct cpu_type cpu_type_unknown = CPU_TYPE_ENTRY(Unknown, Unknown, 0);
 
 struct cpu_type *identify_cpu(u32 ver)
 {
@@ -132,10 +145,10 @@ struct cpu_type *identify_cpu(u32 ver)
 /*
  * Return a 32-bit mask indicating which cores are present on this SOC.
  */
-u32 cpu_mask()
+u32 cpu_mask(void)
 {
 	ccsr_pic_t __iomem *pic = (void *)CONFIG_SYS_MPC8xxx_PIC_ADDR;
-	struct cpu_type *cpu = gd->cpu;
+	struct cpu_type *cpu = gd->arch.cpu;
 
 	/* better to query feature reporting register than just assume 1 */
 	if (cpu == &cpu_type_unknown)
@@ -151,8 +164,9 @@ u32 cpu_mask()
 /*
  * Return the number of cores on this SOC.
  */
-int cpu_numcores() {
-	struct cpu_type *cpu = gd->cpu;
+int cpu_numcores(void)
+{
+	struct cpu_type *cpu = gd->arch.cpu;
 
 	/*
 	 * Report # of cores in terms of the cpu_mask if we haven't
@@ -182,7 +196,7 @@ int probecpu (void)
 	svr = get_svr();
 	ver = SVR_SOC_VER(svr);
 
-	gd->cpu = identify_cpu(ver);
+	gd->arch.cpu = identify_cpu(ver);
 
 	return 0;
 }
@@ -190,7 +204,7 @@ int probecpu (void)
 /* Once in memory, compute mask & # cores once and save them off */
 int fixup_cpu(void)
 {
-	struct cpu_type *cpu = gd->cpu;
+	struct cpu_type *cpu = gd->arch.cpu;
 
 	if (cpu->num_cores == 0) {
 		cpu->mask = cpu_mask();

@@ -36,6 +36,16 @@
 #ifndef _U_BOOT_H_
 #define _U_BOOT_H_	1
 
+#include <config.h>
+#include <compiler.h>
+
+#ifdef CONFIG_SYS_GENERIC_BOARD
+/* Use the generic board which requires a unified bd_info */
+#include <asm-generic/u-boot.h>
+#else
+
+#ifndef __ASSEMBLY__
+
 typedef struct bd_info {
 	unsigned long	bi_memstart;	/* start of DRAM memory */
 	phys_size_t	bi_memsize;	/* size	 of DRAM memory in bytes */
@@ -56,6 +66,10 @@ typedef struct bd_info {
 		ulong size;
 	}bi_dram[CONFIG_NR_DRAM_BANKS];
 } bd_t;
+
+#endif /* __ASSEMBLY__ */
+
+#endif /* !CONFIG_SYS_GENERIC_BOARD */
 
 /* For image.h:image_check_target_arch() */
 #define IH_ARCH_DEFAULT IH_ARCH_I386
