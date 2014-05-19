@@ -61,6 +61,15 @@
 #define CONSOLE_ARG			"console=console=ttyS0,115200\0"
 
 /*
+ * Ethernet
+ */
+#define CONFIG_ETHOC
+#define CONFIG_SYS_ETHOC_BASE 		0x92000000
+
+#define CONFIG_BOOTFILE			"boot.img"
+#define CONFIG_LOADADDR			0x100000 /* 1MB mark */
+
+/*
  * TIMER
  */
 #define CONFIG_SYS_HZ			1000
@@ -113,7 +122,7 @@
  */
 /* We're running in RAM */
 #define CONFIG_MONITOR_IS_IN_RAM
-#define CONFIG_SYS_MONITOR_LEN	0x40000	/* Reserve 256k */
+#define CONFIG_SYS_MONITOR_LEN	0x80000	/* Reserve 512k */
 #define CONFIG_SYS_MONITOR_BASE	(CONFIG_SYS_SDRAM_BASE + \
 				CONFIG_SYS_SDRAM_SIZE - \
 				CONFIG_SYS_MONITOR_LEN)
@@ -148,25 +157,34 @@
 #define CONFIG_SYS_LOAD_ADDR		CONFIG_SYS_SDRAM_BASE
 #define CONFIG_SYS_MEMTEST_START	(CONFIG_SYS_SDRAM_BASE + 0x2000)
 #define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_INIT_SP_ADDR - 0x20000)
-#define CONFIG_CMDLINE_EDITING
 
 /*
  * Command line configuration.
  */
 #include <config_cmd_default.h>
 
-#undef CONFIG_CMD_NET
 #undef CONFIG_CMD_NFS
+
+#define CONFIG_CMD_NET
+#define CONFIG_CMD_MII
+#define CONFIG_CMD_DHCP
+#define CONFIG_CMD_PING
 
 #define CONFIG_CMD_IRQ
 #define CONFIG_CMD_ELF
 #define CONFIG_CMD_BSP
 
 #define CONFIG_CMD_SF
+#define CONFIG_CMD_MMC
 #define CONFIG_CMD_SPI
 #define CONFIG_CMD_MTDPARTS
 #define CONFIG_LZO
 
+/* MMC */
+#define CONFIG_GENERIC_MMC
+#define CONFIG_MMC
+#define CONFIG_SDHCI
+#define CONFIG_MMC_SDMA
 
 /*
  * MTD
@@ -175,20 +193,26 @@
 #define CONFIG_MTD_PARTITIONS
 #define CONFIG_LZO
 #define CONFIG_BZIP2
-#define CONFIG_GZIP
 
 /*
  * Default environment variables
  */
 #define CONFIG_BOOTARGS		"uart,mmio,0x90000000,115200"
 #define CONFIG_BOOTCOMMAND	"sf probe; "	\
-	"sf read 0x6400000 0x100000 0x200000;"	\
-    "bootm 0x6400000;"
+	"sf read 0x6400000 0x100000 0x200000;"
 #define CONFIG_CMDLINE_TAG
 #define CONFIG_CMDLINE_EDITING	1
-#define CONFIG_BOOTDELAY 1
+#define CONFIG_BOOTDELAY 5
 
 #define CONFIG_OF_LIBFDT
 #define CONFIG_LMB
+
+/*
+ * BOOTP options
+ */
+#define CONFIG_BOOTP_BOOTFILESIZE
+#define CONFIG_BOOTP_BOOTPATH
+#define CONFIG_BOOTP_GATEWAY
+#define CONFIG_BOOTP_HOSTNAME
 
 #endif /* __CONFIG_H */
