@@ -28,6 +28,8 @@
  * BOARD/CPU
  */
 
+#define DE0_EXPANSION
+
 #define CONFIG_SYS_CLK_FREQ		50000000
 #define CONFIG_SYS_RESET_ADDR		0x00000100
 
@@ -63,11 +65,13 @@
 /*
  * Ethernet
  */
-#define CONFIG_ETHOC
-#define CONFIG_SYS_ETHOC_BASE 		0x92000000
+#ifdef DE0_EXPANSION
+# define CONFIG_ETHOC
+# define CONFIG_SYS_ETHOC_BASE 		0x92000000
 
-#define CONFIG_BOOTFILE			"boot.img"
-#define CONFIG_LOADADDR			0x100000 /* 1MB mark */
+# define CONFIG_BOOTFILE			"boot.img"
+# define CONFIG_LOADADDR			0x100000 /* 1MB mark */
+#endif
 
 /*
  * TIMER
@@ -163,28 +167,35 @@
  */
 #include <config_cmd_default.h>
 
-#undef CONFIG_CMD_NFS
 
-#define CONFIG_CMD_NET
-#define CONFIG_CMD_MII
-#define CONFIG_CMD_DHCP
-#define CONFIG_CMD_PING
+#ifdef DE0_EXPANSION
+# define CONFIG_CMD_NET
+# define CONFIG_CMD_MII
+# define CONFIG_CMD_DHCP
+# define CONFIG_CMD_PING
+# define CONFIG_CMD_MMC
+#else
+# undef CONFIG_CMD_NET
+#endif
+
+#undef CONFIG_CMD_NFS
 
 #define CONFIG_CMD_IRQ
 #define CONFIG_CMD_ELF
 #define CONFIG_CMD_BSP
 
 #define CONFIG_CMD_SF
-#define CONFIG_CMD_MMC
 #define CONFIG_CMD_SPI
 #define CONFIG_CMD_MTDPARTS
 #define CONFIG_LZO
 
 /* MMC */
-#define CONFIG_GENERIC_MMC
-#define CONFIG_MMC
-#define CONFIG_SDHCI
-#define CONFIG_MMC_SDMA
+#ifdef DE0_EXPANSION
+# define CONFIG_GENERIC_MMC
+# define CONFIG_MMC
+# define CONFIG_SDHCI
+# define CONFIG_MMC_SDMA
+#endif
 
 /*
  * MTD
@@ -210,9 +221,11 @@
 /*
  * BOOTP options
  */
-#define CONFIG_BOOTP_BOOTFILESIZE
-#define CONFIG_BOOTP_BOOTPATH
-#define CONFIG_BOOTP_GATEWAY
-#define CONFIG_BOOTP_HOSTNAME
+#ifdef DE0_EXPANSION
+# define CONFIG_BOOTP_BOOTFILESIZE
+# define CONFIG_BOOTP_BOOTPATH
+# define CONFIG_BOOTP_GATEWAY
+# define CONFIG_BOOTP_HOSTNAME
+#endif
 
 #endif /* __CONFIG_H */
